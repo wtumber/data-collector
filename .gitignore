@@ -1,0 +1,6 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+mongo_credentials.csv
+app_credentials.csv
