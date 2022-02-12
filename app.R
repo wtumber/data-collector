@@ -2,6 +2,7 @@ library(shiny)
 library(shinyauthr)
 library(mongolite)
 library(ggplot2)
+library(shinythemes)
 
 # App credentials from external files
 app_credentials <- read.csv("app_credentials.csv")
@@ -58,13 +59,12 @@ loadData <- function() {
 
 
 #===== App UI ======
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme("superhero"),
     tags$head(
         tags$style(
             HTML(".shiny-notification {
              position:fixed;
              top: calc(50%);
-             left: calc(50% - 150px));
              }
              "
             )
@@ -76,10 +76,7 @@ ui <- fluidPage(
     div(class = "pull-right", shinyauthr::logoutUI(id = "logout")),
     shinyauthr::loginUI(id = "login"),
 
-    uiOutput("ui"),
-
-    shiny::actionButton("browser","browser")
-
+    uiOutput("ui")
 
 )
 
@@ -101,9 +98,6 @@ server <- function(input, output, session) {
         id = "logout",
         active = reactive(credentials()$user_auth)
     )
-
-    # TEMP
-    shiny::observeEvent(input$browser,{browser()})
 
     # render UI
     output$ui <- renderUI({
@@ -127,9 +121,10 @@ server <- function(input, output, session) {
             ),
             shiny::tabPanel("Visualisations",value = "vistab",
                 column(12, align="center",
-                    shiny::selectInput("plot_type",label = "Select Plot",choices = c("Line"),selected="Line"),
-                    shiny::plotOutput("visPlot"),
-                    shiny::tableOutput("table")
+                    #shiny::selectInput("plot_type",label = "Select Plot",choices = c("Line"),selected="Line"),
+                    shiny::selectInput("axisContent",label = "Show on axis:",choices = c("Humidity","Temp"),selected="Humidity",multiple = F),
+                    shiny::plotOutput("visPlot")
+                    #shiny::tableOutput("table")
                 )
 
             )
@@ -161,16 +156,38 @@ server <- function(input, output, session) {
     })
 
     output$visPlot <- shiny::renderPlot({
-        ggplot(data.frame(r$mongoData)) +
-            geom_point(aes(x =readingTime, y=ambientHumidity,color="Ambient")) +
-            geom_point(aes(x =readingTime,y=GHHumidity,color="GH"))
+        req(input$axisContent)
+
+        pl <- ggplot(data.frame(r$mongoData))
+
+        if("Humidity" %in% input$axisContent) {
+            pl <- pl +
+            geom_line(aes(x =readingTime, y=ambientHumidity,color="Ambient"),size=1) +
+            geom_line(aes(x =readingTime,y=GHHumidity,color="GH"),size=1) +
+            geom_errorbar(aes(x =readingTime, ymin=ambientHumidity - 5,ymax=ambientHumidity + 5,color="Ambient"),size=1) +
+            geom_errorbar(aes(x =readingTime,ymin=GHHumidity - 5,ymax=GHHumidity + 5,color="GH"),size=1) +
+            geom_point(aes(x =readingTime, y=ambientHumidity,color="Ambient"),size=3) +
+            geom_point(aes(x =readingTime,y=GHHumidity,color="GH"),size=3)+ theme_minimal()
+                }
+
+        if("Temp" %in% input$axisContent) {
+            pl <- pl +
+                geom_line(aes(x =readingTime, y=ambientTemp,color="Ambient"),size=1) +
+                geom_line(aes(x =readingTime,y=GHTemp,color="GH"),size=1) +
+                geom_errorbar(aes(x =readingTime, ymin=ambientTemp - 5,ymax=ambientTemp + 5,color="Ambient"),size=1) +
+                geom_errorbar(aes(x =readingTime,ymin=GHTemp - 5,ymax=GHTemp + 5,color="GH"),size=1) +
+                geom_point(aes(x =readingTime, y=ambientTemp,color="Ambient"),size=3) +
+                geom_point(aes(x =readingTime,y=GHTemp,color="GH"),size=3) + theme_minimal()
+            }
+
+        pl
     })
 
-    output$table <- shiny::renderTable({
-        req(nrow(r$mongoData) > 1)
-
-        data.frame(r$mongoData)
-    })
+    # output$table <- shiny::renderTable({
+    #     req(nrow(r$mongoData) > 1)
+    #
+    #     data.frame(r$mongoData)
+    # })
 
 }
 

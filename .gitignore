@@ -4,3 +4,4 @@
 .Ruserdata
 mongo_credentials.csv
 app_credentials.csv
+rsconnect/
