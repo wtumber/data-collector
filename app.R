@@ -174,8 +174,8 @@ server <- function(input, output, session) {
             pl <- pl +
                 geom_line(aes(x =readingTime, y=ambientTemp,color="Ambient"),size=1) +
                 geom_line(aes(x =readingTime,y=GHTemp,color="GH"),size=1) +
-                geom_errorbar(aes(x =readingTime, ymin=ambientTemp - 5,ymax=ambientTemp + 5,color="Ambient"),size=1) +
-                geom_errorbar(aes(x =readingTime,ymin=GHTemp - 5,ymax=GHTemp + 5,color="GH"),size=1) +
+                geom_errorbar(aes(x =readingTime, ymin=ambientTemp - 1,ymax=ambientTemp + 1,color="Ambient"),size=1) +
+                geom_errorbar(aes(x =readingTime,ymin=GHTemp - 1,ymax=GHTemp + 1,color="GH"),size=1) +
                 geom_point(aes(x =readingTime, y=ambientTemp,color="Ambient"),size=3) +
                 geom_point(aes(x =readingTime,y=GHTemp,color="GH"),size=3) + theme_minimal()
             }
