@@ -3,6 +3,7 @@ library(shinyauthr)
 library(mongolite)
 library(ggplot2)
 library(shinythemes)
+library(dplyr)
 
 # App credentials from external files
 app_credentials <- read.csv("app_credentials.csv")
@@ -123,8 +124,8 @@ server <- function(input, output, session) {
                 column(12, align="center",
                     #shiny::selectInput("plot_type",label = "Select Plot",choices = c("Line"),selected="Line"),
                     shiny::selectInput("axisContent",label = "Show on axis:",choices = c("Humidity","Temp"),selected="Humidity",multiple = F),
+                    #shiny::selectInput("timeSpan",label = "Timespan:",choices = c("1 day","3 days","1 Week"),selected="3 days",multiple = F),
                     shiny::plotOutput("visPlot")
-                    #shiny::tableOutput("table")
                 )
 
             )
@@ -151,43 +152,38 @@ server <- function(input, output, session) {
     shiny::observeEvent(input$tabSwitch, {
         req(input$tabSwitch == "vistab")
 
-        r$mongoData <- loadData()
+        r$mongoData <- data.frame(loadData())
 
     })
 
     output$visPlot <- shiny::renderPlot({
         req(input$axisContent)
 
-        pl <- ggplot(data.frame(r$mongoData))
+        pl <- ggplot(r$mongoData)
 
         if("Humidity" %in% input$axisContent) {
             pl <- pl +
-            geom_line(aes(x =readingTime, y=ambientHumidity,color="Ambient"),size=1) +
-            geom_line(aes(x =readingTime,y=GHHumidity,color="GH"),size=1) +
-            geom_errorbar(aes(x =readingTime, ymin=ambientHumidity - 5,ymax=ambientHumidity + 5,color="Ambient"),size=1) +
-            geom_errorbar(aes(x =readingTime,ymin=GHHumidity - 5,ymax=GHHumidity + 5,color="GH"),size=1) +
-            geom_point(aes(x =readingTime, y=ambientHumidity,color="Ambient"),size=3) +
-            geom_point(aes(x =readingTime,y=GHHumidity,color="GH"),size=3)+ theme_minimal()
+            geom_ribbon(aes(x =readingTime, ymin=ambientHumidity - 5,ymax=ambientHumidity + 5,color="Ambient"),alpha = 0.4,fill="brown2",color="red") +
+            geom_ribbon(aes(x =readingTime,ymin=GHHumidity - 5,ymax=GHHumidity + 5,color="GH"),alpha = 0.4,fill="lightblue",color="blue") +
+            geom_line(aes(x =readingTime, y=ambientHumidity,color="Ambient"),size=1,color="red") +
+            geom_line(aes(x =readingTime,y=GHHumidity,color="GH"),size=1,color="blue") +
+            geom_point(aes(x =readingTime, y=ambientHumidity,color="Ambient"),size=3,color="red") +
+            geom_point(aes(x =readingTime,y=GHHumidity,color="GH"),size=3,color="blue") +
+                theme_minimal()
                 }
 
         if("Temp" %in% input$axisContent) {
             pl <- pl +
-                geom_line(aes(x =readingTime, y=ambientTemp,color="Ambient"),size=1) +
-                geom_line(aes(x =readingTime,y=GHTemp,color="GH"),size=1) +
-                geom_errorbar(aes(x =readingTime, ymin=ambientTemp - 1,ymax=ambientTemp + 1,color="Ambient"),size=1) +
-                geom_errorbar(aes(x =readingTime,ymin=GHTemp - 1,ymax=GHTemp + 1,color="GH"),size=1) +
-                geom_point(aes(x =readingTime, y=ambientTemp,color="Ambient"),size=3) +
-                geom_point(aes(x =readingTime,y=GHTemp,color="GH"),size=3) + theme_minimal()
+                geom_ribbon(aes(x =readingTime, ymin=ambientTemp - 1,ymax=ambientTemp + 1,color="Ambient"),alpha = 0.4,fill="brown2",color="red") +
+                geom_ribbon(aes(x =readingTime,ymin=GHTemp - 1,ymax=GHTemp + 1,color="GH"),alpha = 0.4,fill="lightblue",color="blue") +
+                geom_line(aes(x =readingTime, y=ambientTemp,color="Ambient"),size=1,color="red") +
+                geom_line(aes(x =readingTime,y=GHTemp,color="GH"),size=1,color="blue") +
+                geom_point(aes(x =readingTime, y=ambientTemp,color="Ambient"),size=3,color="red") +
+                geom_point(aes(x =readingTime,y=GHTemp,color="GH"),size=3,color="blue") + theme_minimal()
             }
 
         pl
     })
-
-    # output$table <- shiny::renderTable({
-    #     req(nrow(r$mongoData) > 1)
-    #
-    #     data.frame(r$mongoData)
-    # })
 
 }
 
